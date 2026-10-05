@@ -2,12 +2,12 @@
 const BASE = import.meta.env.VITE_API_URL || '/api'
 const TOKEN_KEY = 'cwie_token'
 
-// โหมดทดสอบ (pretest, เฉพาะตอน dev): แต่ละกรอบในหน้า /pretest เปิดด้วย ?pretest=<role>
+// โหมดทดสอบ (pretest, เปิดให้ใช้ตอนพรีเซนต์ด้วย): แต่ละกรอบในหน้า /pretest เปิดด้วย ?pretest=<role>
 // จำ role ไว้ใน window.name (อยู่รอดตอนรีเฟรชกรอบ) และเก็บ token ในหน่วยความจำของกรอบนั้นเอง
 // จะได้ login คนละ role พร้อมกันได้ในเบราว์เซอร์เดียว
-const fromUrl = import.meta.env.DEV && new URLSearchParams(location.search).get('pretest')
+const fromUrl = new URLSearchParams(location.search).get('pretest')
 if (fromUrl) window.name = 'pretest:' + fromUrl
-export const pretestRole = import.meta.env.DEV && window.name.startsWith('pretest:') ? window.name.slice(8) : null
+export const pretestRole = window.name.startsWith('pretest:') ? window.name.slice(8) : null
 
 let memoryToken = null
 
