@@ -23,8 +23,8 @@ function Gate() {
   const { user, loading } = useAuth()
   const [screen, setScreen] = useState('login')
 
-  // โหมดทดสอบเปิดทุกบทบาทพร้อมกัน (เฉพาะตอน dev) ไม่ต้อง login
-  if (import.meta.env.DEV && location.pathname === '/pretest') return <Pretest />
+  // โหมดทดสอบเปิดทุกบทบาทพร้อมกัน (เปิดให้ใช้ตอนพรีเซนต์ได้เลย)
+  if (location.pathname === '/pretest') return <Pretest />
   if (loading) return null
   if (!user) {
     return screen === 'login'
