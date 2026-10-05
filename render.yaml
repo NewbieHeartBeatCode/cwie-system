@@ -2,6 +2,7 @@ services:
   - type: web
     name: cwie-system
     env: node
+    plan: free
     buildCommand: "npm run build:prod"
     startCommand: "npm run start:prod"
     envVars:
