@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body { font-family: 'IBM Plex Sans Thai', system-ui, sans-serif; }
+
+.navbtn { transition: background .15s, color .15s; }
+.navbtn:hover { background: rgba(255,255,255,.10) !important; }
+.lift { transition: transform .15s, box-shadow .15s; }
+.lift:hover { transform: translateY(-2px); }
+.press:active { transform: translateY(1px); }
+
+/* ตารางนักศึกษา hover ทั้งแถว */
+tr.row:hover td { background: rgba(163,22,33,.05); cursor: pointer; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(120,110,105,.35); border-radius: 8px; }
+
+/* จอเล็ก: sidebar เลื่อนออกมาทับ */
+@media (max-width: 860px) {
+  .rail { position: fixed; z-index: 40; height: 100%; transform: translateX(-100%); }
+  .rail.open { transform: none; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 30; }
+  #menuBtn { display: block !important; }
+}
+
+/* ตอนสั่งพิมพ์ PDF ให้เหลือแต่รายงาน */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}

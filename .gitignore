@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.local
+dist/
+build/
+*.log
+.DS_Store
+
+# ข้อมูลจริงในเครื่อง (มี hash รหัสผ่าน) ไม่ขึ้น git
+backend/database/*.json
+backend/uploads/*
+!backend/uploads/.gitkeep
