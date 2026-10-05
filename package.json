@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "npm install --prefix backend && npm install --prefix frontend",
-    "build:prod": "npm run build --prefix frontend && npm run seed --prefix backend -- --force",
+    "build:prod": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend && npm run seed --prefix backend -- --force",
     "start:prod": "npm run start --prefix backend"
   }
 }
