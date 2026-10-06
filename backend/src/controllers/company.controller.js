@@ -4,10 +4,21 @@ import { toPublic } from '../services/user.service.js'
 import { audit } from '../services/audit.service.js'
 import { handle, httpError, pick } from '../utils/http.js'
 
-const FIELDS = ['name', 'address', 'phone', 'email', 'contactName', 'website', 'description']
+const FIELDS = ['name', 'address', 'phone', 'email', 'contactName', 'website', 'description', 'scope', 'country', 'category']
+const SCOPES = ['domestic', 'international']
+
+// ในประเทศไม่ต้องมีประเทศ, นานาชาติต้องระบุประเทศ
+const checkScope = (data, current = {}) => {
+  const scope = data.scope ?? current.scope ?? 'domestic'
+  if (!SCOPES.includes(scope)) throw httpError(400, 'ประเภทสถานประกอบการไม่ถูกต้อง')
+  const country = scope === 'domestic' ? '' : (data.country ?? current.country ?? '').trim()
+  if (scope === 'international' && !country) throw httpError(400, 'กรุณาระบุประเทศ')
+  return { ...data, scope, country }
+}
 
 const withCounts = (c) => ({
   ...c,
+  scope: c.scope || 'domestic', // ข้อมูลเก่าที่ยังไม่มี scope ถือเป็นในประเทศ
   activeStudents: db.placements.count((p) => p.companyId === c.id && p.status === 'active'),
   totalStudents: db.placements.count((p) => p.companyId === c.id && p.status !== 'rejected'),
 })
@@ -27,9 +38,9 @@ export const get = handle((req, res) => {
 })
 
 export const create = handle((req, res) => {
-  const data = pick(req.body, FIELDS)
+  const data = checkScope(pick(req.body, FIELDS))
   if (!data.name?.trim()) throw httpError(400, 'กรุณากรอกชื่อสถานประกอบการ')
-  const c = db.companies.insert({ address: '', phone: '', email: '', contactName: '', website: '', description: '', ...data, verified: true })
+  const c = db.companies.insert({ address: '', phone: '', email: '', contactName: '', website: '', description: '', category: '', ...data, verified: true })
   audit(req.user, `เพิ่มสถานประกอบการ ${c.name}`)
   res.status(201).json(c)
 })
@@ -41,7 +52,7 @@ export const update = handle((req, res) => {
   if (!isStaff(req.user) && !(req.user.role === 'employer' && req.user.companyId === c.id)) {
     throw httpError(403, 'ไม่มีสิทธิ์แก้ไขสถานประกอบการนี้')
   }
-  const data = pick(req.body, FIELDS)
+  const data = checkScope(pick(req.body, FIELDS), c)
   if (data.name !== undefined && !data.name.trim()) throw httpError(400, 'กรุณากรอกชื่อสถานประกอบการ')
   const updated = db.companies.update(c.id, data)
   audit(req.user, `แก้ไขข้อมูลสถานประกอบการ ${updated.name}`)

@@ -12,8 +12,20 @@ import { useApi } from '@/hooks/useApi'
 import { api } from '@/services/api'
 import { isStaff } from '@/utils/labels'
 
+const SCOPES = [
+  { value: 'domestic', label: 'ในประเทศ' },
+  { value: 'international', label: 'นานาชาติ' },
+]
+const CATEGORIES = [
+  'เทคโนโลยีสารสนเทศ / ซอฟต์แวร์', 'โรงแรม / ท่องเที่ยว', 'การผลิต / อุตสาหกรรม', 'การเงิน / ธนาคาร',
+  'ค้าปลีก / ค้าส่ง', 'โลจิสติกส์', 'สื่อ / การตลาด', 'การศึกษา', 'สุขภาพ / การแพทย์', 'หน่วยงานราชการ / รัฐวิสาหกิจ', 'อื่นๆ',
+].map((c) => ({ value: c, label: c }))
+
 const FIELDS = [
   { key: 'name', label: 'ชื่อสถานประกอบการ', required: true },
+  { key: 'scope', label: 'ประเภท', type: 'select', options: SCOPES, default: 'domestic', placeholder: false, required: true },
+  { key: 'country', label: 'ประเทศ', required: true, hidden: (v) => v.scope !== 'international' },
+  { key: 'category', label: 'หมวดหมู่', type: 'select', options: CATEGORIES },
   { key: 'description', label: 'ลักษณะงาน / ธุรกิจ', type: 'textarea' },
   { key: 'address', label: 'ที่อยู่', type: 'textarea', rows: 2 },
   { key: 'contactName', label: 'ผู้ประสานงาน' },
@@ -27,6 +39,7 @@ export default function Companies() {
   const { user, role } = useAuth()
   const { data, loading, error, reload } = useApi('/companies')
   const [q, setQ] = useState('')
+  const [filter, setFilter] = useState({ scope: '', category: '' })
   const [modal, setModal] = useState(null)
   const staff = isStaff(role)
   const employer = role === 'employer'
@@ -42,7 +55,9 @@ export default function Companies() {
     reload()
   }
 
-  const rows = data?.filter((c) => (!employer || c.id === user.companyId) && matches(q, c.name, c.description, c.address))
+  const rows = data?.filter((c) => (!employer || c.id === user.companyId)
+    && (!filter.scope || c.scope === filter.scope) && (!filter.category || c.category === filter.category)
+    && matches(q, c.name, c.description, c.address, c.country, c.category))
 
   return (
     <div style={{ maxWidth: 1100 }}>
@@ -50,7 +65,12 @@ export default function Companies() {
         title={employer ? 'ข้อมูลสถานประกอบการ' : 'สถานประกอบการ'}
         subtitle={employer ? 'ข้อมูลนี้นักศึกษาและมหาวิทยาลัยจะเห็น' : staff ? 'ตรวจสอบ เพิ่ม และแก้ไขข้อมูลสถานประกอบการ' : 'สถานประกอบการที่ร่วมโครงการ CWIE'}
         actions={staff && <Button icon={Plus} onClick={() => edit()}>เพิ่มสถานประกอบการ</Button>} />
-      {!employer && <FilterBar search={q} onSearch={setQ} />}
+      {!employer && <FilterBar search={q} onSearch={setQ}
+        filters={[
+          { key: 'scope', label: 'ประเภท', value: filter.scope, options: SCOPES },
+          { key: 'category', label: 'หมวดหมู่', value: filter.category, options: CATEGORIES },
+        ]}
+        onFilter={(key, value) => setFilter((f) => ({ ...f, [key]: value }))} />}
 
       <Status loading={loading} error={error} empty={rows?.length === 0 && 'ไม่พบสถานประกอบการ'}>
         <div style={{ display: 'grid', gridTemplateColumns: employer ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
@@ -84,6 +104,12 @@ function CompanyCard({ c, actions }) {
           {c.description && <div style={{ fontSize: 13.5, color: t.muted }}>{c.description}</div>}
         </div>
         <Chip tone={c.verified ? 'ok' : 'warn'}>{c.verified ? 'ตรวจสอบแล้ว' : 'รอตรวจสอบ'}</Chip>
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {c.scope === 'international'
+          ? <Chip tone="run">🌏 นานาชาติ{c.country && ` · ${c.country}`}</Chip>
+          : <Chip>ในประเทศ</Chip>}
+        {c.category && <Chip>{c.category}</Chip>}
       </div>
       {line(MapPin, c.address)}
       {line(User, c.contactName)}
